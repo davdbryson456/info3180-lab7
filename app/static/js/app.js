@@ -40,6 +40,66 @@ const Home = Vue.component('home', {
     }
 });
 
+methods:{
+    UploadForm: function(){
+            let self = this
+            let uploadForm = document.getElementById('uploadForm');
+            let form_data = new FormData(uploadForm);
+            
+            fetch("/api/upload", {
+                method: "POST",
+                body: form_data,
+                headers: {
+                    'X-CSRFToken': token
+                    },
+                credentials: 'same-origin'
+            }).then(function(response){
+                return response.json();
+            }).then(function (jsonResponse) {
+            
+                self.messageFlag = true
+                if (jsonResponse.hasOwnProperty("errors")){
+                    self.errorFlag=true;
+                    self.message = jsonResponse.errors;
+                }else if(jsonResponse.hasOwnProperty("message")){
+                    self.errorFlag = false;
+                    self.message = "File Upload Successful";
+                    self.cleanForm();
+                }
+             })
+             .catch(function (error) {
+                console.log(error);
+             });
+        },
+        cleanForm : function(){
+            let form =$("#uploadForm")[0];
+            let self = this;
+            
+            form.description.value = "";
+            form.photo.value = "";
+            self.filename = "";
+        },
+        onFileSelected: function(){
+            let self = this
+            let filenameArr = $("#photo")[0].value.split("\\");
+            self.filename = filenameArr[filenameArr.length-1]
+        }
+    },
+    data: function(){
+        return {
+            errorFlag: false,
+            messageFlag: false,
+            message: [],
+            filename: ""
+        }
+    }
+})
+
+
+
+
+
+
 const NotFound = Vue.component('not-found', {
     template: `
     <div>
@@ -58,7 +118,7 @@ const router = new VueRouter({
         {path: "/", component: Home},
         // Put other routes here
 
-        // This is a catch all route in case none of the above matches
+        
         {path: "*", component: NotFound}
     ]
 });
